@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lead Hunter — social preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /*
+     * Open this in a browser at exactly 1280×640 to screenshot the GitHub
+     * social preview. In Chrome DevTools: open Device Toolbar (Ctrl+Shift+M),
+     * add a custom viewport of 1280×640, then screenshot the .banner element.
+     * Or: right-click → Capture node screenshot.
+     */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0a0908;
+      font-family: 'JetBrains Mono', monospace;
+      color: #f2ede4;
+      -webkit-font-smoothing: antialiased;
+    }
+    .banner {
+      width: 1280px;
+      height: 640px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 72% 50%, rgba(200, 236, 92, 0.14), rgba(200, 236, 92, 0) 55%),
+        linear-gradient(135deg, #12100e 0%, #0a0908 100%);
+    }
+    .grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+    .grain {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+      background-size: 3px 3px;
+      pointer-events: none;
+    }
+
+    /* Top bar */
+    .top {
+      position: absolute; top: 32px; left: 72px; right: 72px;
+      display: flex; justify-content: space-between;
+      font-size: 11px; letter-spacing: 0.15em; color: #7a736a;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #2a251f;
+    }
+    .top .connected {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: #c8ec5c;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #c8ec5c;
+      box-shadow: 0 0 10px #c8ec5c;
+    }
+
+    /* Left column */
+    .left { position: absolute; top: 118px; left: 72px; width: 560px; }
+    .logo-row { display: flex; align-items: center; gap: 20px; }
+    .logo {
+      width: 60px; height: 60px; border-radius: 10px;
+      background: #1a1612; border: 1px solid #2a251f;
+      display: grid; place-items: center;
+    }
+    .wordmark {
+      font-family: 'Instrument Serif', serif;
+      font-size: 42px; color: #f2ede4; letter-spacing: -0.01em;
+      line-height: 1;
+    }
+    .wordmark-sub {
+      margin-top: 6px;
+      font-size: 11px; letter-spacing: 0.2em; color: #7a736a;
+    }
+
+    .headline {
+      margin-top: 60px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 74px; line-height: 1; letter-spacing: -0.02em;
+    }
+    .headline .accent { color: #c8ec5c; font-style: italic; display: block; }
+
+    .subtitle {
+      margin-top: 24px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 20px; color: #a89f92; line-height: 1.4;
+    }
+
+    .bullets {
+      margin-top: 40px;
+      display: flex; flex-direction: column; gap: 10px;
+      font-size: 12px; letter-spacing: 0.08em; color: #8a8175;
+    }
+    .bullet { display: flex; gap: 12px; }
+    .bullet-mark { color: #c8ec5c; }
+
+    /* Right column — mock cards */
+    .right {
+      position: absolute; top: 130px; right: 72px; width: 510px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .card {
+      background: #171310;
+      border-radius: 10px;
+      padding: 18px 20px;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .card.hot::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; background: #c8ec5c; border-radius: 10px 0 0 10px;
+    }
+    .card-grid {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image:
+        linear-gradient(#c8ec5c 1px, transparent 1px),
+        linear-gradient(90deg, #c8ec5c 1px, transparent 1px);
+      background-size: 6px 6px;
+      pointer-events: none;
+      border-radius: 10px;
+    }
+    .chips { display: flex; gap: 8px; }
+    .chip {
+      padding: 3px 8px; border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; letter-spacing: 0.03em;
+      border: 1px solid transparent;
+    }
+    .chip.score { background: rgba(200,236,92,0.14); color: #c8ec5c; border-color: rgba(200,236,92,0.4); font-weight: 700; }
+    .chip.score.warn { background: rgba(224,176,96,0.14); color: #e0b060; border-color: rgba(224,176,96,0.3); }
+    .chip.company { background: rgba(200,236,92,0.10); color: #c8ec5c; border-color: rgba(200,236,92,0.3); }
+    .chip.time { background: rgba(58,128,200,0.12); color: #78b0e0; border-color: rgba(58,128,200,0.3); }
+
+    .title {
+      margin-top: 12px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px; color: #f2ede4; line-height: 1.2;
+    }
+    .meta {
+      margin-top: 10px;
+      display: flex; gap: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: #8a8175;
+    }
+    .meta .star { color: #e0b060; }
+
+    .status-line {
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: #5a5148;
+    }
+    .status-line .arrow { color: #c8ec5c; margin-right: 8px; }
+
+    /* Footer */
+    .footer {
+      position: absolute; bottom: 28px; left: 72px; right: 72px;
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; letter-spacing: 0.15em; color: #5a5148;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <div class="grid"></div>
+    <div class="grain"></div>
+
+    <div class="top">
+      <span>SIGNAL TERMINAL · v1.0</span>
+      <span class="connected"><span class="dot"></span>CONNECTED</span>
+    </div>
+
+    <div class="left">
+      <div class="logo-row">
+        <div class="logo">
+          <svg viewBox="0 0 60 60" width="42" height="42">
+            <g transform="translate(30 30)">
+              <circle r="18" fill="none" stroke="#c8ec5c" stroke-width="1" opacity="0.9"/>
+              <line x1="0" y1="-26" x2="0" y2="-20" stroke="#c8ec5c" stroke-width="1.6" stroke-linecap="round"/>
+              <line x1="0" y1="20" x2="0" y2="26" stroke="#c8ec5c" stroke-width="1.6" stroke-linecap="round"/>
+              <line x1="-26" y1="0" x2="-20" y2="0" stroke="#c8ec5c" stroke-width="1.6" stroke-linecap="round"/>
+              <line x1="20" y1="0" x2="26" y2="0" stroke="#c8ec5c" stroke-width="1.6" stroke-linecap="round"/>
+              <circle r="8" fill="none" stroke="#c8ec5c" stroke-width="0.8" opacity="0.4"/>
+              <circle r="3" fill="#c8ec5c"/>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="wordmark">Lead Hunter</div>
+          <div class="wordmark-sub">UPWORK · INTELLIGENCE · TERMINAL</div>
+        </div>
+      </div>
+
+      <h1 class="headline">
+        Hunt the
+        <span class="accent">real clients.</span>
+      </h1>
+
+      <p class="subtitle">
+        Scrape, score, enrich, and draft proposals.<br/>
+        All on your machine. AI-powered end-to-end.
+      </p>
+
+      <div class="bullets">
+        <div class="bullet"><span class="bullet-mark">›</span>CLOUDFLARE-BYPASSING SCRAPER</div>
+        <div class="bullet"><span class="bullet-mark">›</span>200-ENTRY COMPANY DETECTOR</div>
+        <div class="bullet"><span class="bullet-mark">›</span>GROQ / LLAMA 3.3 PROPOSAL DRAFTS</div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card hot">
+        <div class="card-grid"></div>
+        <div class="chips">
+          <span class="chip score">92%</span>
+          <span class="chip company">BrickDistrict</span>
+          <span class="chip time">14m ago</span>
+        </div>
+        <div class="title">Build a LEGO Inventory Management System</div>
+        <div class="meta">
+          <span class="star">★ 4.98</span>
+          <span>$5K+ spent</span>
+          <span>US</span>
+          <span>$85/hr</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chips">
+          <span class="chip score warn">76%</span>
+          <span class="chip company">Bello Construction</span>
+        </div>
+        <div class="title">Python data scraper for regulatory registers</div>
+        <div class="meta">
+          <span class="star">★ 4.9</span>
+          <span>$2K+ spent</span>
+          <span>CA</span>
+          <span>Fixed $600</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chips">
+          <span class="chip score warn">68%</span>
+          <span class="chip company">Arise-network</span>
+        </div>
+        <div class="title">Cloudflare Pages + D1 evidence database</div>
+        <div class="meta">
+          <span class="star">★ 5.0</span>
+          <span>$18K+ spent</span>
+          <span>UK</span>
+          <span>$45-70/hr</span>
+        </div>
+      </div>
+
+      <div class="status-line">
+        <span class="arrow">›</span>scraped 108 jobs · flagged 3 real companies · drafted 3 proposals
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>github.com/ujrxty/lead-hunter</span>
+      <span>MIT · PYTHON · NEXT.JS · GROQ</span>
+    </div>
+  </div>
+</body>
+</html>
