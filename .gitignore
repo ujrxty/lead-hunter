@@ -1,0 +1,80 @@
+# ============================================================
+# Python / backend
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+.env.local
+.env.*.local
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ============================================================
+# Local databases & session state
+# ============================================================
+*.db
+*.sqlite
+*.sqlite3
+upwork_session.json
+
+# ============================================================
+# Node / frontend
+# ============================================================
+node_modules/
+.next/
+out/
+.turbo/
+next-env.d.ts
+*.tsbuildinfo
+
+# ============================================================
+# Editor / OS
+# ============================================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ============================================================
+# Runtime / logs
+# ============================================================
+*.log
+logs/
+*.pid
+
+# ============================================================
+# Local scratch (kept on disk, ignored by git)
+# ============================================================
+debug_*.py
+debug_*.png
+scratch_*
+tmp/
+test_scraper.py
+test_nodriver.py
+test_pagination.py
+test_detector.py
+test_enrich.py
+re_detect.py
+re_enrich.py
+cleanup_db.py
+fix_session.py
+auto_session.py
+*_screenshot.png
+
+# ============================================================
+# Local agent / assistant folders
+# ============================================================
+.claude/
+.cursor/
+.aider*
+CLAUDE.md
+AGENTS.md
