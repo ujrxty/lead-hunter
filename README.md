@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/social-preview.png" alt="Lead Hunter — Signal Terminal for Upwork intelligence" width="100%"/>
+</p>
+
 # Lead Hunter
 
 **AI-powered Upwork intelligence — surface high-signal job posts, enrich the clients, generate proposals.**
