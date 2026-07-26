@@ -68,6 +68,7 @@ re_enrich.py
 cleanup_db.py
 fix_session.py
 auto_session.py
+save_session.py
 *_screenshot.png
 
 # ============================================================
