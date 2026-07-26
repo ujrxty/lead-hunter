@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lead Hunter — reel poster (1080×1920)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #0a0908; font-family: 'JetBrains Mono', monospace; color: #f2ede4; -webkit-font-smoothing: antialiased; }
+
+    .poster {
+      width: 1080px;
+      height: 1920px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(200, 236, 92, 0.16), rgba(200, 236, 92, 0) 55%),
+        radial-gradient(circle at 20% 85%, rgba(200, 236, 92, 0.08), rgba(200, 236, 92, 0) 50%),
+        linear-gradient(180deg, #14110f 0%, #0a0908 100%);
+      padding: 80px 72px;
+    }
+    .grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* ==== TOP STATUS ==== */
+    .status {
+      position: relative;
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #2a251f;
+      font-size: 16px; letter-spacing: 0.2em; color: #7a736a;
+    }
+    .connected { display: inline-flex; align-items: center; gap: 12px; color: #c8ec5c; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: #c8ec5c; box-shadow: 0 0 16px #c8ec5c; }
+
+    /* ==== LOGO ==== */
+    .logo-row {
+      position: relative;
+      margin-top: 80px;
+      display: flex; align-items: center; gap: 28px;
+    }
+    .logo {
+      width: 96px; height: 96px; border-radius: 16px;
+      background: #1a1612; border: 1px solid #2a251f;
+      display: grid; place-items: center;
+      box-shadow: 0 0 40px rgba(200, 236, 92, 0.2);
+    }
+    .wordmark { font-family: 'Instrument Serif', serif; font-size: 72px; line-height: 1; letter-spacing: -0.01em; }
+    .wordmark-sub { margin-top: 12px; font-size: 15px; letter-spacing: 0.25em; color: #7a736a; }
+
+    /* ==== HEADLINE ==== */
+    .headline {
+      position: relative;
+      margin-top: 80px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 148px; line-height: 0.95; letter-spacing: -0.025em; color: #f2ede4;
+    }
+    .headline .accent { color: #c8ec5c; font-style: italic; display: block; }
+
+    .subtitle {
+      margin-top: 32px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 34px; color: #a89f92; line-height: 1.35;
+      max-width: 800px;
+    }
+
+    /* ==== MOCK CARDS ==== */
+    .cards {
+      position: relative;
+      margin-top: 72px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .card {
+      background: #171310;
+      border-radius: 14px;
+      padding: 24px 28px;
+      position: relative;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+    .card.hot::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 5px; background: #c8ec5c; border-radius: 14px 0 0 14px;
+    }
+    .card.hot { padding-left: 32px; }
+    .card-grid {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image:
+        linear-gradient(#c8ec5c 1px, transparent 1px),
+        linear-gradient(90deg, #c8ec5c 1px, transparent 1px);
+      background-size: 8px 8px;
+      pointer-events: none;
+      border-radius: 14px;
+    }
+    .chips { display: flex; gap: 10px; align-items: center; }
+    .chip {
+      padding: 5px 12px; border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px; letter-spacing: 0.03em;
+      border: 1px solid transparent;
+    }
+    .chip.score { background: rgba(200,236,92,0.14); color: #c8ec5c; border-color: rgba(200,236,92,0.4); font-weight: 700; }
+    .chip.score.warn { background: rgba(224,176,96,0.14); color: #e0b060; border-color: rgba(224,176,96,0.3); }
+    .chip.company { background: rgba(200,236,92,0.10); color: #c8ec5c; border-color: rgba(200,236,92,0.3); }
+    .chip.time { background: rgba(58,128,200,0.12); color: #78b0e0; border-color: rgba(58,128,200,0.3); }
+    .title {
+      margin-top: 16px;
+      font-family: 'Instrument Serif', serif;
+      font-size: 30px; color: #f2ede4; line-height: 1.2;
+    }
+    .meta {
+      margin-top: 14px;
+      display: flex; gap: 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px; color: #8a8175;
+    }
+    .meta .star { color: #e0b060; }
+
+    /* ==== FEATURE BULLETS ==== */
+    .features {
+      position: relative;
+      margin-top: 64px;
+      display: flex; flex-direction: column; gap: 22px;
+      font-size: 22px; letter-spacing: 0.02em; color: #c9c1b4;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .feature { display: flex; gap: 20px; align-items: baseline; }
+    .feature .mark { color: #c8ec5c; font-weight: 700; font-size: 24px; }
+
+    /* ==== FOOTER ==== */
+    .footer {
+      position: absolute;
+      bottom: 72px; left: 72px; right: 72px;
+      padding-top: 32px;
+      border-top: 1px solid #2a251f;
+      display: flex; justify-content: space-between; align-items: end;
+    }
+    .footer .repo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 40px; color: #c8ec5c;
+      letter-spacing: -0.01em;
+    }
+    .footer .repo-sub {
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; letter-spacing: 0.15em; color: #7a736a;
+    }
+    .footer .stack {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; letter-spacing: 0.2em; color: #5a5148;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <div class="grid"></div>
+
+    <!-- Status bar -->
+    <div class="status">
+      <span>SIGNAL TERMINAL · v1.0</span>
+      <span class="connected"><span class="dot"></span>CONNECTED</span>
+    </div>
+
+    <!-- Logo + wordmark -->
+    <div class="logo-row">
+      <div class="logo">
+        <svg viewBox="0 0 60 60" width="64" height="64">
+          <g transform="translate(30 30)">
+            <circle r="18" fill="none" stroke="#c8ec5c" stroke-width="1.2" opacity="0.9"/>
+            <line x1="0" y1="-26" x2="0" y2="-20" stroke="#c8ec5c" stroke-width="2" stroke-linecap="round"/>
+            <line x1="0" y1="20" x2="0" y2="26" stroke="#c8ec5c" stroke-width="2" stroke-linecap="round"/>
+            <line x1="-26" y1="0" x2="-20" y2="0" stroke="#c8ec5c" stroke-width="2" stroke-linecap="round"/>
+            <line x1="20" y1="0" x2="26" y2="0" stroke="#c8ec5c" stroke-width="2" stroke-linecap="round"/>
+            <circle r="8" fill="none" stroke="#c8ec5c" stroke-width="0.9" opacity="0.4"/>
+            <circle r="3.5" fill="#c8ec5c"/>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <div class="wordmark">Lead Hunter</div>
+        <div class="wordmark-sub">UPWORK · INTELLIGENCE · TERMINAL</div>
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="headline">
+      Hunt the
+      <span class="accent">real clients.</span>
+    </h1>
+
+    <p class="subtitle">
+      AI-powered scraper, detector, enricher, and proposal writer. All on your machine.
+    </p>
+
+    <!-- Mock cards -->
+    <div class="cards">
+      <div class="card hot">
+        <div class="card-grid"></div>
+        <div class="chips">
+          <span class="chip score">92%</span>
+          <span class="chip company">BrickDistrict</span>
+          <span class="chip time">14m ago</span>
+        </div>
+        <div class="title">Build a LEGO Inventory Management System</div>
+        <div class="meta">
+          <span class="star">★ 4.98</span>
+          <span>$5K+ spent</span>
+          <span>US</span>
+          <span>$85/hr</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chips">
+          <span class="chip score warn">76%</span>
+          <span class="chip company">Bello Construction</span>
+        </div>
+        <div class="title">Python data scraper for regulatory registers</div>
+        <div class="meta">
+          <span class="star">★ 4.9</span>
+          <span>$2K+ spent</span>
+          <span>CA</span>
+          <span>Fixed $600</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature"><span class="mark">›</span>Cloudflare-bypassing scraper</div>
+      <div class="feature"><span class="mark">›</span>Rock-solid company detection (0 false positives)</div>
+      <div class="feature"><span class="mark">›</span>Auto-enriches with website + email</div>
+      <div class="feature"><span class="mark">›</span>AI-generated cover letters (Groq / LLaMA 3.3)</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>
+        <div class="repo">github.com/ujrxty/lead-hunter</div>
+        <div class="repo-sub">FREE · OPEN SOURCE · MIT</div>
+      </div>
+      <div class="stack">
+        PYTHON<br/>NEXT.JS<br/>GROQ
+      </div>
+    </div>
+  </div>
+</body>
+</html>
