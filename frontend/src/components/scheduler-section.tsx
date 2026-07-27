@@ -10,6 +10,7 @@ export function SchedulerSection() {
   const [newSearchName, setNewSearchName] = useState("");
   const [newKeywords, setNewKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
+  const [newMaxPages, setNewMaxPages] = useState(15);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
 
@@ -125,6 +126,7 @@ export function SchedulerSection() {
       createSearchMutation.mutate({
         name: newSearchName,
         keywords: newKeywords,
+        max_pages: newMaxPages,
         is_scheduled: true,
       });
     }
@@ -241,6 +243,20 @@ export function SchedulerSection() {
               ))}
             </div>
           )}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="mono-label">Pages:</span>
+            {[5, 15, 25, 50].map((p) => (
+              <button
+                key={p}
+                onClick={() => setNewMaxPages(p)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  newMaxPages === p ? "bg-signal text-[var(--signal-ink)]" : "btn-ghost border border-border"
+                }`}
+              >
+                {p} (~{p * 10} jobs)
+              </button>
+            ))}
+          </div>
           <button
             onClick={handleCreateSearch}
             disabled={!newSearchName || newKeywords.length === 0 || createSearchMutation.isPending}
@@ -370,6 +386,7 @@ function SearchCard({
             ))}
           </div>
           <div className="flex items-center gap-4 font-mono text-xs text-dim">
+            <span>{search.max_pages || 5} pages</span>
             <span>Runs: {search.run_count}</span>
             {search.last_run_at && <span>Last: {formatTimeAgo(search.last_run_at)}</span>}
             {search.last_new_jobs > 0 && <span className="text-signal">+{search.last_new_jobs} new</span>}

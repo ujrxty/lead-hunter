@@ -27,7 +27,7 @@ class SchedulerService:
         self._next_run_at: Optional[datetime] = None
         self._interval_minutes = 30
         self._delay_between_searches = 3  # seconds between page fetches
-        self._max_pages_per_search = 10
+        self._max_pages_per_search = 25
 
     @property
     def is_running(self) -> bool:
