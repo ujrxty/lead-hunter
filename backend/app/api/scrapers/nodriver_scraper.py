@@ -187,45 +187,35 @@ class NodriverScraper:
             await asyncio.sleep(3)
 
             logger.info(f"Scraping up to {effective_max} pages (limit={limit})")
-            empty_pages_in_a_row = 0
-            consecutive_db_dupes = 0
-            DUPE_THRESHOLD = 8  # Stop if we see 8+ jobs we already have in a row
+            no_new_pages = 0  # Track consecutive pages with 0 truly new jobs
 
             for page_num in range(effective_max):
                 logger.info(f"Scraping page {page_num + 1}/{effective_max}")
                 await self._random_delay(2, 4)
 
-                # Extract jobs and dedupe by upwork_id — Upwork sometimes
-                # repeats results across pages, especially near the tail.
+                # Extract jobs from page
                 jobs = await self._extract_jobs(page, request.keywords)
-                new_jobs = [j for j in jobs if j.upwork_id and j.upwork_id not in seen_ids]
 
-                # Check how many are already in our database
+                # Filter: not seen this session AND not in database
                 truly_new = []
-                for j in new_jobs:
+                for j in jobs:
+                    if not j.upwork_id or j.upwork_id in seen_ids:
+                        continue
                     seen_ids.add(j.upwork_id)
-                    if j.upwork_id in db_ids:
-                        consecutive_db_dupes += 1
-                    else:
-                        consecutive_db_dupes = 0  # Reset on finding new job
+                    if j.upwork_id not in db_ids:
                         truly_new.append(j)
 
                 all_jobs.extend(truly_new)
-                logger.info(f"Page {page_num + 1}: {len(jobs)} extracted, {len(truly_new)} truly new (total {len(all_jobs)}), {consecutive_db_dupes} consecutive dupes")
+                logger.info(f"Page {page_num + 1}: {len(jobs)} extracted, {len(truly_new)} truly new (total {len(all_jobs)})")
 
-                # Stop early if we've caught up with existing jobs
-                if db_ids and consecutive_db_dupes >= DUPE_THRESHOLD:
-                    logger.info(f"Hit {consecutive_db_dupes} consecutive already-seen jobs — caught up, stopping.")
-                    break
-
-                # Stop early if the page returned nothing new — we've hit the end.
-                if len(new_jobs) == 0:
-                    empty_pages_in_a_row += 1
-                    if empty_pages_in_a_row >= 2:
-                        logger.info("Two consecutive empty pages — stopping.")
+                # Stop early if we're getting pages with no new jobs (caught up)
+                if len(truly_new) == 0:
+                    no_new_pages += 1
+                    if db_ids and no_new_pages >= 2:
+                        logger.info(f"{no_new_pages} consecutive pages with 0 new jobs — caught up, stopping.")
                         break
                 else:
-                    empty_pages_in_a_row = 0
+                    no_new_pages = 0
 
                 if page_num < effective_max - 1:
                     if not await self._go_to_next_page(page, page_num):
