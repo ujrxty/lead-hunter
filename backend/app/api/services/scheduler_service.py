@@ -11,7 +11,7 @@ from app.core.database import async_session_maker
 from app.models.job import SearchQuery, SchedulerRun, Job
 from app.schemas.job import SearchRequest, JobCreate
 from app.api.scrapers.nodriver_scraper import nodriver_scraper
-from app.api.detectors.company_detector import company_detector
+from app.api.detectors.company_detector import company_detector, validate_company_with_llm
 from app.api.services.notification_service import notification_service
 from app.api.services.settings_service import settings_service
 
@@ -199,6 +199,19 @@ class SchedulerService:
                     if not has_mention:
                         continue
 
+                    # LLM validation - verify it's actually the hiring company
+                    is_real_company = await validate_company_with_llm(company_name, job_data.description)
+                    if not is_real_company:
+                        continue
+
+                    # Check DB again to avoid race conditions with other searches
+                    exists = await db.execute(
+                        select(Job.id).where(Job.upwork_id == job_data.upwork_id).limit(1)
+                    )
+                    if exists.scalar_one_or_none():
+                        existing_ids.add(job_data.upwork_id)
+                        continue
+
                     job = Job(
                         **job_data.model_dump(),
                         has_company_mention=True,
@@ -236,12 +249,15 @@ class SchedulerService:
             return new_count, company_count
 
         except Exception as e:
+            import traceback
+            error_msg = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
+            logger.error(f"Search '{query_name}' failed: {error_msg}")
             # Log the failure
             async with async_session_maker() as db:
                 run = SchedulerRun(
                     search_query_id=query_id,
                     status="failed",
-                    error_message=str(e),
+                    error_message=error_msg[:1000],  # Truncate if too long
                     started_at=datetime.now(),
                     completed_at=datetime.now()
                 )

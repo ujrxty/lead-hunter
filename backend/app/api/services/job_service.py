@@ -5,7 +5,7 @@ from loguru import logger
 
 from app.models.job import Job, SearchQuery
 from app.schemas.job import JobCreate, JobUpdate, SearchRequest
-from app.api.detectors.company_detector import company_detector
+from app.api.detectors.company_detector import company_detector, validate_company_with_llm
 from app.api.scrapers.nodriver_scraper import nodriver_scraper
 
 
@@ -22,6 +22,12 @@ class JobService:
         has_mention, company_name, confidence, context = company_detector.has_company_mention(
             job_data.description
         )
+
+        # LLM validation if company detected
+        if has_mention and company_name:
+            is_real = await validate_company_with_llm(company_name, job_data.description)
+            if not is_real:
+                has_mention, company_name, confidence, context = False, None, 0.0, None
 
         if existing_job:
             for key, value in job_data.model_dump(exclude_unset=True).items():
@@ -85,7 +91,7 @@ class JobService:
         company_count_result = await db.execute(company_count_query)
         company_count = company_count_result.scalar()
 
-        query = query.order_by(Job.has_company_mention.desc(), Job.company_confidence.desc(), Job.created_at.desc())
+        query = query.order_by(Job.created_at.desc(), Job.company_confidence.desc())
         query = query.offset((page - 1) * per_page).limit(per_page)
 
         result = await db.execute(query)

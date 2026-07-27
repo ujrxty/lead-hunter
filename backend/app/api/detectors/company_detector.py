@@ -166,10 +166,31 @@ class CompanyDetector:
         "machine learning", "deep learning", "computer vision",
         "natural language", "large language",
         "csv excel", "excel csv",
+        # Social media / ad platform phrases
+        "instagram reels", "instagram stories", "facebook ads", "meta ads",
+        "tiktok ads", "youtube shorts", "youtube ads", "google ads",
+        "linkedin ads", "pinterest ads", "twitter ads", "x ads",
+        # Generic product/service phrases
+        "ai ugc", "ugc ads", "ugc content", "ai video", "ai videos",
+        "short form", "long form", "short-form", "long-form",
+        "restaurant pos", "pos system", "pos systems",
     }
 
     # Tech names — never companies, always tools/products.
     TECH_NAMES = {
+        # Social media / ad platforms (mentioned as ad destinations, not hiring companies)
+        "meta", "facebook", "instagram", "tiktok", "youtube", "twitter", "x",
+        "linkedin", "pinterest", "snapchat", "threads", "reddit", "whatsapp",
+        "google ads", "bing ads", "amazon ads",
+        # Video/streaming
+        "vimeo", "twitch", "rumble", "dailymotion",
+        # AI video/content tools
+        "elevenlabs", "higgsfield", "heygen", "synthesia", "d-id", "runway",
+        "midjourney", "sora", "veo", "kling", "pika", "luma", "stable diffusion",
+        "dall-e", "dalle", "ideogram", "leonardo", "flux",
+        # Travel/hospitality platforms (often mentioned as comparisons)
+        "airbnb", "booking", "expedia", "vrbo", "uber", "lyft", "doordash",
+        "instacart", "grubhub", "postmates",
         # Databases
         "supabase", "firebase", "mongodb", "postgres", "postgresql", "mysql", "redis",
         "dynamodb", "cassandra", "elasticsearch", "sqlite", "mariadb",
@@ -349,6 +370,12 @@ class CompanyDetector:
                 "success", "growth", "strategy", "operations", "finance",
                 "healthcare", "education", "technology", "industry",
                 "america", "european", "asian", "global", "international",
+                # Generic industry/niche terms
+                "health", "wellness", "fitness", "beauty", "fashion",
+                "ecommerce", "e-commerce", "retail", "restaurant", "hospitality",
+                "real estate", "mortgage", "insurance", "legal", "medical",
+                "automotive", "travel", "food", "beverage", "entertainment",
+                "sports", "gaming", "music", "media", "news", "brand", "brands",
             }
             if lower in common_english:
                 return False
@@ -406,3 +433,39 @@ class CompanyDetector:
 
 
 company_detector = CompanyDetector()
+
+
+async def validate_company_with_llm(company_name: str, job_description: str) -> bool:
+    """Use LLM to verify if the detected company is actually the hiring company."""
+    from groq import Groq
+    from app.api.services.settings_service import settings_service
+
+    try:
+        key = await settings_service.get("groq_api_key")
+        if not key:
+            return True  # No API key, trust pattern match
+
+        client = Groq(api_key=key)
+
+        # Truncate description to save tokens
+        desc_preview = job_description[:800] if len(job_description) > 800 else job_description
+
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",  # Fast model for validation
+            messages=[{
+                "role": "user",
+                "content": f"""Is "{company_name}" the company/client HIRING for this job, or just a platform/tool/example mentioned in the description?
+
+Job description:
+{desc_preview}
+
+Reply with ONLY "yes" if {company_name} is the actual hiring company, or "no" if it's just a platform, tool, or example."""
+            }],
+            temperature=0,
+            max_tokens=10
+        )
+
+        answer = response.choices[0].message.content.strip().lower()
+        return answer.startswith("yes")
+    except Exception:
+        return True  # On error, trust pattern match
