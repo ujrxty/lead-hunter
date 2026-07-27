@@ -226,6 +226,7 @@ class SchedulerService:
                     jobs_found=len(scraped_jobs),
                     new_jobs=new_count,
                     jobs_with_company=company_count,
+                    started_at=datetime.now(),
                     completed_at=datetime.now()
                 )
                 db.add(run)
@@ -241,6 +242,7 @@ class SchedulerService:
                     search_query_id=query_id,
                     status="failed",
                     error_message=str(e),
+                    started_at=datetime.now(),
                     completed_at=datetime.now()
                 )
                 db.add(run)
