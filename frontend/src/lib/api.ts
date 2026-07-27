@@ -9,6 +9,10 @@ import type {
   UserProfile,
   EnrichedLead,
   LeadAnalysis,
+  SchedulerStatus,
+  SavedSearch,
+  SchedulerRun,
+  Notification,
 } from "./types";
 
 /**
@@ -266,3 +270,98 @@ export const settingsApi = {
     return data;
   },
 };
+
+export const schedulerApi = {
+  getStatus: async (): Promise<SchedulerStatus> => {
+    const { data } = await api.get("/scheduler/status");
+    return data;
+  },
+
+  start: async (intervalMinutes: number = 30): Promise<SchedulerStatus> => {
+    const { data } = await api.post("/scheduler/start", { interval_minutes: intervalMinutes });
+    return data;
+  },
+
+  stop: async (): Promise<SchedulerStatus> => {
+    const { data } = await api.post("/scheduler/stop");
+    return data;
+  },
+
+  runNow: async (): Promise<{ message?: string; error?: string }> => {
+    const { data } = await api.post("/scheduler/run-now");
+    return data;
+  },
+
+  setInterval: async (minutes: number): Promise<SchedulerStatus> => {
+    const { data } = await api.put("/scheduler/interval", { interval_minutes: minutes });
+    return data;
+  },
+
+  getHistory: async (limit: number = 20): Promise<SchedulerRun[]> => {
+    const { data } = await api.get("/scheduler/history", { params: { limit } });
+    return data;
+  },
+
+  getSavedSearches: async (): Promise<SavedSearch[]> => {
+    const { data } = await api.get("/scheduler/searches");
+    return data;
+  },
+
+  createSavedSearch: async (search: {
+    name: string;
+    keywords: string[];
+    search_type?: string;
+    max_pages?: number;
+    is_scheduled?: boolean;
+  }): Promise<SavedSearch> => {
+    const { data } = await api.post("/scheduler/searches", search);
+    return data;
+  },
+
+  updateSavedSearch: async (
+    id: number,
+    update: Partial<{
+      name: string;
+      keywords: string[];
+      search_type: string;
+      max_pages: number;
+      is_scheduled: boolean;
+      is_active: boolean;
+    }>
+  ): Promise<void> => {
+    await api.put(`/scheduler/searches/${id}`, update);
+  },
+
+  deleteSavedSearch: async (id: number): Promise<void> => {
+    await api.delete(`/scheduler/searches/${id}`);
+  },
+
+  getRecentNotifications: async (limit: number = 20): Promise<Notification[]> => {
+    const { data } = await api.get("/scheduler/notifications/recent", { params: { limit } });
+    return data;
+  },
+};
+
+export function createNotificationStream(
+  onMessage: (notification: Notification) => void,
+  onError?: (error: Event) => void
+): EventSource {
+  const url = `${getApiBaseUrl()}/scheduler/notifications/stream`;
+  const eventSource = new EventSource(url);
+
+  eventSource.onmessage = (event) => {
+    try {
+      const notification = JSON.parse(event.data) as Notification;
+      onMessage(notification);
+    } catch (e) {
+      console.error("Failed to parse notification:", e);
+    }
+  };
+
+  eventSource.onerror = (error) => {
+    console.error("SSE error:", error);
+    onError?.(error);
+  };
+
+  return eventSource;
+}

@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: lead-hunter-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./data/upwork_jobs.db
+      - key: SCRAPER_HEADLESS
+        value: "true"
+      - key: PORT
+        value: "8500"
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 1
+    healthCheckPath: /health
+
+  - type: web
+    name: lead-hunter-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/out
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: lead-hunter-api
+          type: web
+          property: host

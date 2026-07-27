@@ -103,3 +103,46 @@ export interface LeadAnalysis {
   reasons: string[];
   recommendation: "apply" | "skip" | "maybe";
 }
+
+export interface SchedulerStatus {
+  is_running: boolean;
+  interval_minutes: number;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  delay_between_searches: number;
+  max_pages_per_search: number;
+}
+
+export interface SavedSearch {
+  id: number;
+  name: string | null;
+  keywords: string[];
+  search_type: string;
+  max_pages: number;
+  is_active: boolean;
+  is_scheduled: boolean;
+  run_count: number;
+  last_run_at: string | null;
+  last_new_jobs: number;
+  created_at: string;
+}
+
+export interface SchedulerRun {
+  id: number;
+  search_query_id: number;
+  status: "running" | "completed" | "failed";
+  jobs_found: number;
+  new_jobs: number;
+  jobs_with_company: number;
+  error_message: string | null;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export interface Notification {
+  type: "new_jobs" | "scheduler_status" | "error";
+  title: string;
+  message: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+}

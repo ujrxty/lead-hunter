@@ -12,7 +12,9 @@ from app.api.routes import jobs_router
 from app.api.routes.ai import router as ai_router
 from app.api.routes.session import router as session_router
 from app.api.routes.settings import router as settings_router
+from app.api.routes.scheduler import router as scheduler_router
 from app.api.services.settings_service import settings_service
+from app.api.services.scheduler_service import scheduler_service
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -72,6 +74,10 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Settings preload failed: {e}")
     yield
     logger.info("Shutting down...")
+    # Stop scheduler gracefully
+    if scheduler_service.is_running:
+        await scheduler_service.stop()
+        logger.info("Scheduler stopped")
 
 
 app = FastAPI(
@@ -101,6 +107,7 @@ app.include_router(jobs_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 app.include_router(session_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")
+app.include_router(scheduler_router, prefix="/api")
 
 
 @app.get("/")

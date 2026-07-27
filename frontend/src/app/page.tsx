@@ -6,16 +6,18 @@ import { SearchSection } from "@/components/search-section";
 import { LeadsSection } from "@/components/leads-section";
 import { ProfileSection } from "@/components/profile-section";
 import { SettingsSection } from "@/components/settings-section";
+import { SchedulerSection } from "@/components/scheduler-section";
 import { ConnectionStatus } from "@/components/connection-status";
-import { sessionApi, jobsApi } from "@/lib/api";
+import { sessionApi, jobsApi, schedulerApi } from "@/lib/api";
 
-type Tab = "search" | "leads" | "profile" | "settings";
+type Tab = "search" | "scheduler" | "leads" | "profile" | "settings";
 
 const TABS: { id: Tab; label: string; num: string }[] = [
   { id: "search", label: "Signal", num: "01" },
-  { id: "leads", label: "Leads", num: "02" },
-  { id: "profile", label: "Profile", num: "03" },
-  { id: "settings", label: "Settings", num: "04" },
+  { id: "scheduler", label: "Auto", num: "02" },
+  { id: "leads", label: "Leads", num: "03" },
+  { id: "profile", label: "Profile", num: "04" },
+  { id: "settings", label: "Settings", num: "05" },
 ];
 
 export default function Home() {
@@ -30,6 +32,12 @@ export default function Home() {
     queryKey: ["session-status"],
     queryFn: sessionApi.getStatus,
     refetchInterval: 30000,
+  });
+
+  const { data: schedulerStatus } = useQuery({
+    queryKey: ["scheduler-status"],
+    queryFn: schedulerApi.getStatus,
+    refetchInterval: 10000,
   });
 
   return (
@@ -101,6 +109,12 @@ export default function Home() {
 
             {/* Right */}
             <div className="flex items-center gap-3">
+              {schedulerStatus?.is_running && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-signal/10 border border-signal/30">
+                  <span className="status-dot connected animate-pulse" />
+                  <span className="font-mono text-[11px] text-signal">Auto: {schedulerStatus.interval_minutes}m</span>
+                </div>
+              )}
               <ConnectionStatus status={sessionStatus} />
             </div>
           </div>
@@ -124,6 +138,7 @@ export default function Home() {
       <main className="max-w-[1240px] mx-auto px-6 py-10">
         <div className="animate-fade-in" key={activeTab}>
           {activeTab === "search" && <SearchSection />}
+          {activeTab === "scheduler" && <SchedulerSection />}
           {activeTab === "leads" && <LeadsSection />}
           {activeTab === "profile" && <ProfileSection />}
           {activeTab === "settings" && <SettingsSection />}

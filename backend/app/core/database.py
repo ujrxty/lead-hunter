@@ -5,7 +5,8 @@ from app.core.config import settings
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
-    future=True
+    future=True,
+    connect_args={"timeout": 30}
 )
 
 AsyncSessionLocal = async_sessionmaker(

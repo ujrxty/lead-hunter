@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8500:8500"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/upwork_jobs.db
+      - SCRAPER_HEADLESS=true
+      - DEBUG=false
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3500:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8500/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  data:

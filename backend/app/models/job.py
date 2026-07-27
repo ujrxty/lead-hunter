@@ -51,13 +51,17 @@ class SearchQuery(Base):
     __tablename__ = "search_queries"
 
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200))  # user-friendly name
     keywords = Column(JSON, nullable=False)
     search_type = Column(String(20), default="AND")  # AND or OR
     filters = Column(JSON)
+    max_pages = Column(Integer, default=5)
 
     is_active = Column(Boolean, default=True)
+    is_scheduled = Column(Boolean, default=False)  # included in auto-scheduler
     run_count = Column(Integer, default=0)
     last_run_at = Column(DateTime)
+    last_new_jobs = Column(Integer, default=0)
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -125,3 +129,18 @@ class AppSetting(Base):
     key = Column(String(100), primary_key=True)
     value = Column(Text)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class SchedulerRun(Base):
+    """Track scheduler run history."""
+    __tablename__ = "scheduler_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    search_query_id = Column(Integer, index=True)
+    status = Column(String(20), default="running")  # running, completed, failed
+    jobs_found = Column(Integer, default=0)
+    new_jobs = Column(Integer, default=0)
+    jobs_with_company = Column(Integer, default=0)
+    error_message = Column(Text)
+    started_at = Column(DateTime, server_default=func.now())
+    completed_at = Column(DateTime)
