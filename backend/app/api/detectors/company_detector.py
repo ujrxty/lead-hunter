@@ -23,8 +23,8 @@ class CompanyMatch:
 
 
 # Minimum confidence a match must reach to be reported as a company mention.
-# Tuned to catch real brand mentions but reject "with LLMs", "AI Agents", etc.
-MIN_CONFIDENCE = 0.60
+# Lowered to catch more real companies (some false positives acceptable)
+MIN_CONFIDENCE = 0.45
 
 
 class CompanyDetector:
@@ -89,6 +89,26 @@ class CompanyDetector:
         # bare-URL brand: https://acme.com or www.acme.com
         (r"https?://(?:www\.)?([a-z][a-z0-9\-]{2,})\.(?:com|io|co|ai|net|org|app|dev|xyz)\b",
          0.75, "bare_url"),
+
+        # "for Acme" / "with Acme" / "join Acme"
+        (r"\b(?:for|with|join|at)\s+([A-Z][A-Za-z][A-Za-z0-9&\-'\.]*(?:\s+[A-Z][A-Za-z0-9&\-'\.]+){0,2})\b",
+         0.45, "preposition_company"),
+
+        # "Acme team" / "Acme's team"
+        (r"\b([A-Z][A-Za-z][A-Za-z0-9&\-'\.]+)(?:'s)?\s+team\b",
+         0.50, "company_team"),
+
+        # Email domain: contact@acme.com
+        (r"\b[a-z0-9._%+-]+@([a-z][a-z0-9\-]{2,})\.(?:com|io|co|ai|net|org)\b",
+         0.70, "email_domain"),
+
+        # "based in [City]" often followed by company context
+        (r"\b([A-Z][A-Za-z][A-Za-z0-9&\-'\.]*(?:\s+[A-Z][A-Za-z0-9&\-'\.]+){0,2})\s+(?:is\s+)?based\s+in\b",
+         0.55, "company_based_in"),
+
+        # "[Company] needs" / "[Company] requires"
+        (r"\b([A-Z][A-Za-z][A-Za-z0-9&\-'\.]*(?:\s+[A-Z][A-Za-z0-9&\-'\.]+){0,2})\s+(?:needs|requires|wants)\b",
+         0.50, "company_needs"),
     ]
 
     # Common English/business words that should NEVER be a company name on their own.
