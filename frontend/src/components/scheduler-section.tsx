@@ -11,6 +11,7 @@ export function SchedulerSection() {
   const [newKeywords, setNewKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
 
   const { data: status, refetch: refetchStatus } = useQuery({
     queryKey: ["scheduler-status"],
@@ -68,29 +69,48 @@ export function SchedulerSection() {
   });
 
   useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPermission(window.Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const permission = await window.Notification.requestPermission();
+      setNotifPermission(permission);
+      if (permission === "granted") {
+        new window.Notification("Notifications Enabled", { body: "You'll get alerts for new hot leads" });
+      }
+    }
+  };
+
+  useEffect(() => {
     const eventSource = createNotificationStream(
       (notification) => {
         setNotifications((prev) => [notification, ...prev].slice(0, 20));
-        if (notification.type === "new_jobs" && Notification.permission === "granted") {
-          new window.Notification(notification.title, { body: notification.message });
+
+        // Show desktop notification for new jobs
+        if (typeof window !== "undefined" && "Notification" in window && window.Notification.permission === "granted") {
+          if (notification.type === "new_jobs") {
+            new window.Notification(notification.title, {
+              body: notification.message,
+              icon: "/favicon.ico"
+            });
+          }
         }
+
         if (notification.type === "scheduler_status") {
           refetchStatus();
         }
         queryClient.invalidateQueries({ queryKey: ["jobs"] });
         queryClient.invalidateQueries({ queryKey: ["stats"] });
+        queryClient.invalidateQueries({ queryKey: ["scheduler-history"] });
       },
       () => {}
     );
 
     return () => eventSource.close();
   }, [queryClient, refetchStatus]);
-
-  useEffect(() => {
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
 
   const addKeyword = () => {
     const v = keywordInput.trim();
@@ -120,9 +140,19 @@ export function SchedulerSection() {
             <h2 className="font-display text-2xl text-foreground mt-1 leading-none">24/7 Job Hunter</h2>
             <p className="text-sm text-dim mt-2">Automatically scrape Upwork on a schedule. New jobs are deduplicated.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`status-dot ${status?.is_running ? "connected" : "disconnected"}`} />
-            <span className="mono-label">{status?.is_running ? "Running" : "Stopped"}</span>
+          <div className="flex items-center gap-3">
+            {notifPermission !== "granted" && (
+              <button
+                onClick={requestNotificationPermission}
+                className="px-3 py-1.5 rounded-md text-xs btn-ghost border border-signal/50 text-signal"
+              >
+                Enable Notifications
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <span className={`status-dot ${status?.is_running ? "connected" : "disconnected"}`} />
+              <span className="mono-label">{status?.is_running ? "Running" : "Stopped"}</span>
+            </div>
           </div>
         </div>
 
