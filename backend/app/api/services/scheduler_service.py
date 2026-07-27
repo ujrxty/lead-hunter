@@ -164,13 +164,22 @@ class SchedulerService:
         query_name = query_info["name"]
 
         try:
+            # Get existing job IDs to detect duplicates early
+            existing_ids = set()
+            async with async_session_maker() as db:
+                result = await db.execute(select(Job.upwork_id))
+                existing_ids = {row[0] for row in result.fetchall()}
+
+            logger.info(f"Loaded {len(existing_ids)} existing job IDs for dedup")
+
             request = SearchRequest(
                 keywords=query_info["keywords"],
                 search_type=query_info["search_type"] or "AND",
                 max_pages=min(query_info["max_pages"], self._max_pages_per_search)
             )
 
-            scraped_jobs = await nodriver_scraper.search_jobs(request)
+            # Pass existing IDs to scraper for early stopping
+            scraped_jobs = await nodriver_scraper.search_jobs(request, existing_ids=existing_ids)
 
             new_count = 0
             company_count = 0
@@ -178,18 +187,16 @@ class SchedulerService:
             # Use a fresh session for storing jobs
             async with async_session_maker() as db:
                 for job_data in scraped_jobs:
+                    # Skip if already exists (double-check)
+                    if job_data.upwork_id in existing_ids:
+                        continue
+
                     has_mention, company_name, confidence, context = company_detector.has_company_mention(
                         job_data.description
                     )
 
                     # Only store jobs with company mentions
                     if not has_mention:
-                        continue
-
-                    existing = await db.execute(
-                        select(Job).where(Job.upwork_id == job_data.upwork_id)
-                    )
-                    if existing.scalar_one_or_none():
                         continue
 
                     job = Job(
@@ -202,6 +209,7 @@ class SchedulerService:
                     db.add(job)
                     new_count += 1
                     company_count += 1
+                    existing_ids.add(job_data.upwork_id)  # Track for this session
 
                 # Update query stats
                 query_result = await db.execute(select(SearchQuery).where(SearchQuery.id == query_id))

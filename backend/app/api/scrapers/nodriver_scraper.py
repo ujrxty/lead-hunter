@@ -124,7 +124,7 @@ class NodriverScraper:
         encoded_query = quote_plus(query)
         return f"https://www.upwork.com/nx/search/jobs/?q={encoded_query}&sort=recency"
 
-    async def search_jobs(self, request: SearchRequest, max_pages: Optional[int] = None) -> List[JobCreate]:
+    async def search_jobs(self, request: SearchRequest, max_pages: Optional[int] = None, existing_ids: Optional[set] = None) -> List[JobCreate]:
         """Search for jobs on Upwork using Nodriver.
 
         max_pages behavior:
@@ -132,10 +132,14 @@ class NodriverScraper:
                      (still hard-capped at 100 pages / ~1000 jobs to avoid runaway).
         - N > 0:     scrape at most N pages.
         The request's own max_pages field (if set) takes precedence over the arg.
+
+        existing_ids: Set of upwork_ids we already have in DB. If provided,
+        we stop early when we hit too many consecutive already-seen jobs.
         """
         await self.init()
         all_jobs: List[JobCreate] = []
         seen_ids: set = set()
+        db_ids: set = existing_ids or set()
 
         # Resolve effective limit: request field wins, else the arg, else default 10.
         req_max = getattr(request, "max_pages", None)
@@ -184,6 +188,8 @@ class NodriverScraper:
 
             logger.info(f"Scraping up to {effective_max} pages (limit={limit})")
             empty_pages_in_a_row = 0
+            consecutive_db_dupes = 0
+            DUPE_THRESHOLD = 8  # Stop if we see 8+ jobs we already have in a row
 
             for page_num in range(effective_max):
                 logger.info(f"Scraping page {page_num + 1}/{effective_max}")
@@ -193,10 +199,24 @@ class NodriverScraper:
                 # repeats results across pages, especially near the tail.
                 jobs = await self._extract_jobs(page, request.keywords)
                 new_jobs = [j for j in jobs if j.upwork_id and j.upwork_id not in seen_ids]
+
+                # Check how many are already in our database
+                truly_new = []
                 for j in new_jobs:
                     seen_ids.add(j.upwork_id)
-                all_jobs.extend(new_jobs)
-                logger.info(f"Page {page_num + 1}: {len(jobs)} extracted, {len(new_jobs)} new (total {len(all_jobs)})")
+                    if j.upwork_id in db_ids:
+                        consecutive_db_dupes += 1
+                    else:
+                        consecutive_db_dupes = 0  # Reset on finding new job
+                        truly_new.append(j)
+
+                all_jobs.extend(truly_new)
+                logger.info(f"Page {page_num + 1}: {len(jobs)} extracted, {len(truly_new)} truly new (total {len(all_jobs)}), {consecutive_db_dupes} consecutive dupes")
+
+                # Stop early if we've caught up with existing jobs
+                if db_ids and consecutive_db_dupes >= DUPE_THRESHOLD:
+                    logger.info(f"Hit {consecutive_db_dupes} consecutive already-seen jobs — caught up, stopping.")
+                    break
 
                 # Stop early if the page returned nothing new — we've hit the end.
                 if len(new_jobs) == 0:
