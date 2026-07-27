@@ -83,7 +83,7 @@ class SchedulerService:
             await notification_service.notify_scheduler_status("stopped")
 
     async def set_interval(self, minutes: int):
-        self._interval_minutes = max(5, min(minutes, 1440))  # 5 min to 24 hours
+        self._interval_minutes = max(1, min(minutes, 1440))  # 1 min to 24 hours
 
         if self.is_running:
             self._scheduler.reschedule_job(

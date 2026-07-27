@@ -144,7 +144,7 @@ export function SchedulerSection() {
           {!status?.is_running ? (
             <>
               <span className="mono-label ml-4">Auto:</span>
-              {[15, 30, 60, 120].map((m) => (
+              {[5, 15, 30, 60].map((m) => (
                 <button
                   key={m}
                   onClick={() => startMutation.mutate(m)}
