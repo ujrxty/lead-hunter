@@ -86,7 +86,7 @@ export function SchedulerSection() {
   };
 
   useEffect(() => {
-    const eventSource = createNotificationStream(
+    const stream = createNotificationStream(
       (notification) => {
         setNotifications((prev) => [notification, ...prev].slice(0, 20));
 
@@ -106,11 +106,10 @@ export function SchedulerSection() {
         queryClient.invalidateQueries({ queryKey: ["jobs"] });
         queryClient.invalidateQueries({ queryKey: ["stats"] });
         queryClient.invalidateQueries({ queryKey: ["scheduler-history"] });
-      },
-      () => {}
+      }
     );
 
-    return () => eventSource.close();
+    return () => stream.close();
   }, [queryClient, refetchStatus]);
 
   const addKeyword = () => {

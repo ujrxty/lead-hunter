@@ -345,23 +345,45 @@ export const schedulerApi = {
 export function createNotificationStream(
   onMessage: (notification: Notification) => void,
   onError?: (error: Event) => void
-): EventSource {
-  const url = `${getApiBaseUrl()}/scheduler/notifications/stream`;
-  const eventSource = new EventSource(url);
+): { close: () => void } {
+  let eventSource: EventSource | null = null;
+  let reconnectAttempts = 0;
+  let closed = false;
 
-  eventSource.onmessage = (event) => {
-    try {
-      const notification = JSON.parse(event.data) as Notification;
-      onMessage(notification);
-    } catch (e) {
-      console.error("Failed to parse notification:", e);
+  const connect = () => {
+    if (closed) return;
+
+    const url = `${getApiBaseUrl()}/scheduler/notifications/stream`;
+    eventSource = new EventSource(url);
+
+    eventSource.onopen = () => {
+      reconnectAttempts = 0;
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const notification = JSON.parse(event.data) as Notification;
+        onMessage(notification);
+      } catch (e) {
+        // Ignore parse errors (keepalive messages)
+      }
+    };
+
+    eventSource.onerror = () => {
+      eventSource?.close();
+      if (!closed && reconnectAttempts < 5) {
+        reconnectAttempts++;
+        setTimeout(connect, 3000 * reconnectAttempts);
+      }
+    };
+  };
+
+  connect();
+
+  return {
+    close: () => {
+      closed = true;
+      eventSource?.close();
     }
   };
-
-  eventSource.onerror = (error) => {
-    console.error("SSE error:", error);
-    onError?.(error);
-  };
-
-  return eventSource;
 }
